@@ -1,4 +1,4 @@
-name: Frontend Build & Deploy
+name: Frontend Build
 
 on:
   push:
@@ -6,37 +6,20 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout the frontend repo
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # 3️⃣ Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # 4️⃣ Build the frontend
-      - name: Build
+      - name: Build frontend
         run: npm run build
-
-      # 5️⃣ Set git identity for gh-pages
-      - name: Configure Git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      # 6️⃣ Deploy to GitHub Pages using GitHub token
-      - name: Deploy to GitHub Pages
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npx gh-pages -d dist -r https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git
