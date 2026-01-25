@@ -1,47 +1,39 @@
 name: Frontend Build & Deploy
 
-
 on:
-push:
-branches:
-- main
-
+  push:
+    branches:
+      - main
 
 jobs:
-build-and-deploy:
-runs-on: ubuntu-latest
+  build-and-deploy:
+    runs-on: ubuntu-latest
 
+    steps:
+      # 1️⃣ Checkout the frontend repo
+      - name: Checkout
+        uses: actions/checkout@v4
 
-steps:
-# 1️⃣ Checkout the frontend repo
-- name: Checkout
-uses: actions/checkout@v4
+      # 2️⃣ Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
+      # 3️⃣ Install dependencies
+      - name: Install dependencies
+        run: npm install
 
-# 2️⃣ Setup Node.js
-- name: Setup Node.js
-uses: actions/setup-node@v4
-with:
-node-version: 20
+      # 4️⃣ Build the frontend
+      - name: Build
+        run: npm run build
 
+      # 5️⃣ Set git identity for gh-pages
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-# 3️⃣ Install dependencies
-- name: Install dependencies
-run: npm install
-
-
-# 4️⃣ Build the frontend
-- name: Build
-run: npm run build
-
-
-# 5️⃣ Set git identity for gh-pages
-- name: Configure Git
-run: |
-git config --global user.name "github-actions[bot]"
-git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-
-# 6️⃣ Deploy to GitHub Pages
-- name: Deploy to GitHub Pages
-run: npm run deploy
+      # 6️⃣ Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
+        run: npm run deploy
