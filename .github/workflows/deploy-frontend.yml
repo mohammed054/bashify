@@ -25,5 +25,6 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          railway link --yes
+          # Link is automatic in CLI v2, no --yes flag
+          railway link
           railway deploy --detach
