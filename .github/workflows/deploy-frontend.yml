@@ -6,27 +6,28 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout code
-      - uses: actions/checkout@v4
+      # 1️⃣ Checkout the frontend repo
+      - name: Checkout
+        uses: actions/checkout@v4
 
       # 2️⃣ Setup Node.js
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
       # 3️⃣ Install dependencies
-      - run: npm install
+      - name: Install dependencies
+        run: npm install
 
-      # 4️⃣ Build frontend (Vite)
-      - run: npm run build
+      # 4️⃣ Build the frontend
+      - name: Build
+        run: npm run build
 
-      # 5️⃣ Upload build as artifact (optional, for deploy or caching)
-      - name: Upload Build
-        uses: actions/upload-artifact@v4   # <-- v4 fixes deprecated error
-        with:
-          name: frontend-build
-          path: dist
+      # 5️⃣ Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
+        run: npm run deploy
