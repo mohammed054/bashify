@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout frontend repo
+      # 1️⃣ Checkout code
       - uses: actions/checkout@v4
 
       # 2️⃣ Setup Node.js
@@ -24,9 +24,9 @@ jobs:
       # 4️⃣ Build frontend (Vite)
       - run: npm run build
 
-      # 5️⃣ Upload build as artifact (optional, useful for Netlify/Vercel CLI)
+      # 5️⃣ Upload build as artifact (optional, for deploy or caching)
       - name: Upload Build
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4   # <-- v4 fixes deprecated error
         with:
           name: frontend-build
           path: dist
