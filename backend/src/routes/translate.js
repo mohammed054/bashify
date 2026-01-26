@@ -39,14 +39,27 @@ router.post('/', async (req, res) => {
     res.json({ command: bashCommand });
 
   } catch (error) {
-    console.error('Translation error:', error);
+    const errorId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    console.error(`[${errorId}] Translation error:`, error);
     
     if (error.message.includes('API key')) {
-      res.status(500).json({ error: 'Server configuration error' });
+      res.status(500).json({ 
+        error: 'Server configuration error',
+        errorId,
+        timestamp: new Date().toISOString()
+      });
     } else if (error.message.includes('quota')) {
-      res.status(429).json({ error: 'API quota exceeded' });
+      res.status(429).json({ 
+        error: 'API quota exceeded',
+        errorId,
+        timestamp: new Date().toISOString()
+      });
     } else {
-      res.status(500).json({ error: 'Translation service unavailable' });
+      res.status(500).json({ 
+        error: 'Translation service unavailable',
+        errorId,
+        timestamp: new Date().toISOString()
+      });
     }
   }
 });
