@@ -4,122 +4,97 @@ import MatrixRain from './MatrixRain'
 import './App.css'
 
 function App() {
-  const [message, setMessage] = useState('Initializing terminal...')
-  const [postData, setPostData] = useState('')
-  const [response, setResponse] = useState('')
+  const [input, setInput] = useState('')
+  const [output, setOutput] = useState('')
   const [isConnected, setIsConnected] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://bashify-backend.up.railway.app'
 
   useEffect(() => {
-    fetchBackendData()
-    createBinaryFloaters()
+    checkBackendConnection()
   }, [])
 
-  const createBinaryFloaters = () => {
-    const container = document.createElement('div')
-    container.className = 'binary-floaters'
-    
-    for (let i = 0; i < 20; i++) {
-      const binary = document.createElement('div')
-      binary.className = 'binary'
-      binary.textContent = Math.random() > 0.5 ? '1' : '0'
-      binary.style.left = Math.random() * 100 + '%'
-      binary.style.animationDelay = Math.random() * 10 + 's'
-      binary.style.animationDuration = (10 + Math.random() * 10) + 's'
-      container.appendChild(binary)
-    }
-    
-    document.body.appendChild(container)
-  }
-
-  const fetchBackendData = async () => {
+  const checkBackendConnection = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/health`)
-      setMessage('✓ Backend connection established')
+      await axios.get(`${API_BASE_URL}/health`)
       setIsConnected(true)
     } catch (error) {
-      setMessage('✗ Backend connection failed')
       setIsConnected(false)
-      if (import.meta.env.DEV) {
-        console.error('Backend connection error:', error)
-      }
     }
   }
 
-  const handlePostRequest = async () => {
+  const handleTranslate = async () => {
+    if (!input.trim()) return
+
+    setIsTyping(true)
+    setOutput('Translating...')
+    
     try {
-      setResponse('Translating command...')
       const response = await axios.post(`${API_BASE_URL}/api/translate`, {
-        input: postData || 'list all files in current directory'
+        input: input.trim()
       })
-      setResponse(response.data.command)
+      
+      // Simulate typing effect
+      setTimeout(() => {
+        setOutput(response.data.command)
+        setIsTyping(false)
+      }, 500)
+      
     } catch (error) {
-      setResponse(`Error: ${error.message}`)
-      if (import.meta.env.DEV) {
-        console.error('POST request error:', error)
-      }
+      setTimeout(() => {
+        setOutput(`Error: ${error.message}`)
+        setIsTyping(false)
+      }, 500)
+    }
+  }
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleTranslate()
     }
   }
 
   return (
     <>
       <MatrixRain />
-      <div className="scan-line"></div>
-      <div className="app terminal-flicker">
-        <header className="app-header">
+      
+      {/* Connection Status Popup */}
+      <div className="connection-status">
+        <div className={`status-dot ${isConnected ? 'online' : 'offline'}`}></div>
+        <span>{isConnected ? 'Online' : 'Offline'}</span>
+      </div>
+
+      {/* Terminal Window */}
+      <div className="terminal">
+        <div className="terminal-header">
           <div className="terminal-dots">
             <div className="terminal-dot red"></div>
             <div className="terminal-dot yellow"></div>
             <div className="terminal-dot green"></div>
           </div>
-          <h1>BASHIFY</h1>
-          <p>English to Bash Command Translator</p>
-          <div className="terminal-prompt">Ready to translate your commands...</div>
-        </header>
+          <div className="terminal-title">bashify — English to Bash Translator</div>
+        </div>
 
-        <main className="app-main">
-          <section className="backend-status">
-            <h2>System Status</h2>
-            <div className="status-message">
-              <strong>Backend:</strong> {message}
-              <div style={{ marginTop: '10px', color: isConnected ? '#00ff00' : '#ff5555' }}>
-                {isConnected ? '● ONLINE' : '● OFFLINE'}
-              </div>
-            </div>
-          </section>
+        <div className="terminal-prompt">
+          <span className="prompt-symbol">user@bashify:~$</span>
+          <input
+            type="text"
+            className="terminal-input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Enter English command to translate..."
+            autoFocus
+          />
+          {isTyping && <span className="cursor"></span>}
+        </div>
 
-          <section className="api-test">
-            <h2>Command Terminal</h2>
-            <div className="input-group">
-              <input
-                type="text"
-                value={postData}
-                onChange={(e) => setPostData(e.target.value)}
-                placeholder="Enter English command (e.g., 'list all files')"
-                className="text-input"
-                onKeyPress={(e) => e.key === 'Enter' && handlePostRequest()}
-              />
-              <button onClick={handlePostRequest} className="send-button">
-                Execute
-              </button>
-            </div>
-            {response && (
-              <div className="response">
-                <strong>Generated Command:</strong>
-                <pre>{response}</pre>
-              </div>
-            )}
-          </section>
-
-          <section className="info">
-            <h2>Deployment Information</h2>
-            <ul>
-              <li>Frontend: GitHub Pages</li>
-              <li>Backend: Railway Cloud Platform</li>
-              <li>Auto-deployment: Git push to main branch</li>
-            </ul>
-          </section>
-        </main>
+        {output && (
+          <div className="terminal-output">
+            <div className="output-label">BASH COMMAND:</div>
+            <div className="output-content">{output}</div>
+          </div>
+        )}
       </div>
     </>
   )

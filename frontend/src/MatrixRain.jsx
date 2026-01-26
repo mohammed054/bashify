@@ -15,25 +15,25 @@ const MatrixRain = () => {
     resizeCanvas()
     window.addEventListener('resize', resizeCanvas)
     
-    // Matrix characters
-    const matrixChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()_+-=[]{}|;:,.<>?~ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ'
-    const fontSize = 14
-    const columns = canvas.width / fontSize
+    // Matrix characters - simpler set
+    const matrixChars = '01'
+    const fontSize = 16
+    const columns = Math.floor(canvas.width / fontSize)
     const drops = []
     
-    // Initialize drops
+    // Initialize drops with random positions
     for (let i = 0; i < columns; i++) {
-      drops[i] = Math.random() * -100
+      drops[i] = Math.random() * -canvas.height / fontSize
     }
     
-    // Animation loop
+    // Animation loop - slower and more subtle
     const draw = () => {
-      // Semi-transparent black for trail effect
-      ctx.fillStyle = 'rgba(10, 10, 10, 0.05)'
+      // Very subtle fade effect
+      ctx.fillStyle = 'rgba(10, 10, 10, 0.03)'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       
-      // Green text
-      ctx.fillStyle = '#00ff41'
+      // Dim green text
+      ctx.fillStyle = 'rgba(0, 255, 65, 0.8)'
       ctx.font = fontSize + 'px monospace'
       
       // Draw characters
@@ -41,17 +41,20 @@ const MatrixRain = () => {
         const text = matrixChars[Math.floor(Math.random() * matrixChars.length)]
         ctx.fillText(text, i * fontSize, drops[i] * fontSize)
         
-        // Reset drop to top when it reaches bottom
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+        // Reset drop when it goes off screen - less frequent
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.99) {
           drops[i] = 0
         }
         
-        // Move drop down
-        drops[i]++
+        // Slower movement
+        if (Math.random() > 0.98) {
+          drops[i]++
+        }
       }
     }
     
-    const interval = setInterval(draw, 35)
+    // Slower animation for background effect
+    const interval = setInterval(draw, 100)
     
     return () => {
       clearInterval(interval)
