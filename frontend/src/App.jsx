@@ -6,7 +6,7 @@ function App() {
   const [message, setMessage] = useState('Loading...')
   const [postData, setPostData] = useState('')
   const [response, setResponse] = useState('')
-  const API_BASE_URL = 'https://bashify-backend.up.railway.app'
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://bashify-backend.up.railway.app'
 
   useEffect(() => {
     fetchBackendData()
@@ -14,32 +14,35 @@ function App() {
 
   const fetchBackendData = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/`)
+      const response = await axios.get(`${API_BASE_URL}/health`)
       setMessage(response.data.message || 'Connected to Railway backend successfully!')
     } catch (error) {
       setMessage('Error connecting to backend. Check console for details.')
-      console.error('Backend connection error:', error)
+      if (import.meta.env.DEV) {
+        console.error('Backend connection error:', error)
+      }
     }
   }
 
   const handlePostRequest = async () => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/test`, {
-        message: postData || 'Hello from GitHub Pages!',
-        timestamp: new Date().toISOString()
+      const response = await axios.post(`${API_BASE_URL}/api/translate`, {
+        input: postData || 'list all files in current directory'
       })
-      setResponse(`Success: ${JSON.stringify(response.data)}`)
+      setResponse(`Translated command: ${response.data.command}`)
     } catch (error) {
       setResponse(`Error: ${error.message}`)
-      console.error('POST request error:', error)
+      if (import.meta.env.DEV) {
+        console.error('POST request error:', error)
+      }
     }
   }
 
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Bashify - GitHub Pages Demo</h1>
-        <p>React frontend connected to Railway backend</p>
+        <h1>Bashify - English to Bash Translator</h1>
+        <p>Translate natural language to Bash commands using AI</p>
       </header>
 
       <main className="app-main">
@@ -51,22 +54,22 @@ function App() {
         </section>
 
         <section className="api-test">
-          <h2>Test API Request</h2>
+          <h2>English to Bash Translation</h2>
           <div className="input-group">
             <input
               type="text"
               value={postData}
               onChange={(e) => setPostData(e.target.value)}
-              placeholder="Enter message to send to backend"
+              placeholder="Enter English command (e.g., 'list all files')"
               className="text-input"
             />
             <button onClick={handlePostRequest} className="send-button">
-              Send to Backend
+              Translate to Bash
             </button>
           </div>
           {response && (
             <div className="response">
-              <strong>Backend Response:</strong>
+              <strong>Generated Bash Command:</strong>
               <pre>{response}</pre>
             </div>
           )}

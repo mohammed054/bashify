@@ -14,9 +14,16 @@ router.post('/', async (req, res) => {
       });
     }
 
-    if (input.trim().length === 0) {
+    // Input sanitization
+    const sanitizedInput = input
+      .trim()
+      .replace(/[<>]/g, '') // Remove potential HTML tags
+      .replace(/[\x00-\x1f\x7f]/g, '') // Remove control characters
+      .substring(0, 1000); // Enforce length limit
+
+    if (sanitizedInput.length === 0) {
       return res.status(400).json({ 
-        error: 'Input cannot be empty' 
+        error: 'Input cannot be empty or contain only invalid characters' 
       });
     }
 
@@ -27,7 +34,7 @@ router.post('/', async (req, res) => {
     }
 
     // Translate English to Bash
-    const bashCommand = await translateToBash(input.trim());
+    const bashCommand = await translateToBash(sanitizedInput);
 
     res.json({ command: bashCommand });
 

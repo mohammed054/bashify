@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/bashify/',
   build: {
-    outDir: '../public',
+    outDir: 'dist',
     emptyOutDir: true
   }
 })
