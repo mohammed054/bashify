@@ -43,7 +43,8 @@ app.use(limiter);
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
   'http://localhost:3000',
   'http://localhost:5173',
-  'https://mohammed054.github.io'
+  'https://mohammed054.github.io',
+  'https://mohammed054.github.io/bashify'
 ];
 app.use(cors({
   origin: allowedOrigins,
