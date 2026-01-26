@@ -1,23 +1,45 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import MatrixRain from './MatrixRain'
 import './App.css'
 
 function App() {
-  const [message, setMessage] = useState('Loading...')
+  const [message, setMessage] = useState('Initializing terminal...')
   const [postData, setPostData] = useState('')
   const [response, setResponse] = useState('')
+  const [isConnected, setIsConnected] = useState(false)
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://bashify-backend.up.railway.app'
 
   useEffect(() => {
     fetchBackendData()
+    createBinaryFloaters()
   }, [])
+
+  const createBinaryFloaters = () => {
+    const container = document.createElement('div')
+    container.className = 'binary-floaters'
+    
+    for (let i = 0; i < 20; i++) {
+      const binary = document.createElement('div')
+      binary.className = 'binary'
+      binary.textContent = Math.random() > 0.5 ? '1' : '0'
+      binary.style.left = Math.random() * 100 + '%'
+      binary.style.animationDelay = Math.random() * 10 + 's'
+      binary.style.animationDuration = (10 + Math.random() * 10) + 's'
+      container.appendChild(binary)
+    }
+    
+    document.body.appendChild(container)
+  }
 
   const fetchBackendData = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/health`)
-      setMessage(response.data.message || 'Connected to Railway backend successfully!')
+      setMessage('✓ Backend connection established')
+      setIsConnected(true)
     } catch (error) {
-      setMessage('Error connecting to backend. Check console for details.')
+      setMessage('✗ Backend connection failed')
+      setIsConnected(false)
       if (import.meta.env.DEV) {
         console.error('Backend connection error:', error)
       }
@@ -26,10 +48,11 @@ function App() {
 
   const handlePostRequest = async () => {
     try {
+      setResponse('Translating command...')
       const response = await axios.post(`${API_BASE_URL}/api/translate`, {
         input: postData || 'list all files in current directory'
       })
-      setResponse(`Translated command: ${response.data.command}`)
+      setResponse(response.data.command)
     } catch (error) {
       setResponse(`Error: ${error.message}`)
       if (import.meta.env.DEV) {
@@ -39,52 +62,66 @@ function App() {
   }
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>Bashify - English to Bash Translator</h1>
-        <p>Translate natural language to Bash commands using AI</p>
-      </header>
-
-      <main className="app-main">
-        <section className="backend-status">
-          <h2>Backend Connection Status</h2>
-          <div className="status-message">
-            <strong>Message from backend:</strong> {message}
+    <>
+      <MatrixRain />
+      <div className="scan-line"></div>
+      <div className="app terminal-flicker">
+        <header className="app-header">
+          <div className="terminal-dots">
+            <div className="terminal-dot red"></div>
+            <div className="terminal-dot yellow"></div>
+            <div className="terminal-dot green"></div>
           </div>
-        </section>
+          <h1>BASHIFY</h1>
+          <p>English to Bash Command Translator</p>
+          <div className="terminal-prompt">Ready to translate your commands...</div>
+        </header>
 
-        <section className="api-test">
-          <h2>English to Bash Translation</h2>
-          <div className="input-group">
-            <input
-              type="text"
-              value={postData}
-              onChange={(e) => setPostData(e.target.value)}
-              placeholder="Enter English command (e.g., 'list all files')"
-              className="text-input"
-            />
-            <button onClick={handlePostRequest} className="send-button">
-              Translate to Bash
-            </button>
-          </div>
-          {response && (
-            <div className="response">
-              <strong>Generated Bash Command:</strong>
-              <pre>{response}</pre>
+        <main className="app-main">
+          <section className="backend-status">
+            <h2>System Status</h2>
+            <div className="status-message">
+              <strong>Backend:</strong> {message}
+              <div style={{ marginTop: '10px', color: isConnected ? '#00ff00' : '#ff5555' }}>
+                {isConnected ? '● ONLINE' : '● OFFLINE'}
+              </div>
             </div>
-          )}
-        </section>
+          </section>
 
-        <section className="info">
-          <h2>Deployment Info</h2>
-          <ul>
-            <li>Frontend: GitHub Pages at http://mohammed054.github.io/bashify</li>
-            <li>Backend: Railway at https://bashify-backend.up.railway.app</li>
-            <li>Auto-deployment: Triggers on push to main branch</li>
-          </ul>
-        </section>
-      </main>
-    </div>
+          <section className="api-test">
+            <h2>Command Terminal</h2>
+            <div className="input-group">
+              <input
+                type="text"
+                value={postData}
+                onChange={(e) => setPostData(e.target.value)}
+                placeholder="Enter English command (e.g., 'list all files')"
+                className="text-input"
+                onKeyPress={(e) => e.key === 'Enter' && handlePostRequest()}
+              />
+              <button onClick={handlePostRequest} className="send-button">
+                Execute
+              </button>
+            </div>
+            {response && (
+              <div className="response">
+                <strong>Generated Command:</strong>
+                <pre>{response}</pre>
+              </div>
+            )}
+          </section>
+
+          <section className="info">
+            <h2>Deployment Information</h2>
+            <ul>
+              <li>Frontend: GitHub Pages</li>
+              <li>Backend: Railway Cloud Platform</li>
+              <li>Auto-deployment: Git push to main branch</li>
+            </ul>
+          </section>
+        </main>
+      </div>
+    </>
   )
 }
 
