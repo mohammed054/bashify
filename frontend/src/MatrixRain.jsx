@@ -15,46 +15,60 @@ const MatrixRain = () => {
     resizeCanvas()
     window.addEventListener('resize', resizeCanvas)
     
-    // Matrix characters - simpler set
-    const matrixChars = '01'
-    const fontSize = 16
+    // Extended Matrix characters with binary, hex, and symbols
+    const matrixChars = '01ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍｦｲｸｺｿﾁｭﾻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍｦｲｸｺｿﾁｭﾻﾜｂｄｈｍｐｱｸｳｰﾅｷﾑｻﾜｶﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍｦｲｸｺｿﾁｭﾻﾜ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    const fontSize = 14
     const columns = Math.floor(canvas.width / fontSize)
     const drops = []
+    const speeds = []
+    const chars = []
+    const colors = ['#00ff41', '#00ff88', '#00ffcc', '#00ffff', '#ffffff']
     
-    // Initialize drops with random positions
+    // Initialize drops with random properties
     for (let i = 0; i < columns; i++) {
       drops[i] = Math.random() * -canvas.height / fontSize
+      speeds[i] = 0.5 + Math.random() * 1.5
+      chars[i] = []
     }
     
-    // Animation loop - slower and more subtle
+    // Animation loop
     const draw = () => {
-      // Very subtle fade effect
-      ctx.fillStyle = 'rgba(10, 10, 10, 0.03)'
+      // Fade effect
+      ctx.fillStyle = 'rgba(10, 10, 10, 0.05)'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       
-      // Dim green text
-      ctx.fillStyle = 'rgba(0, 255, 65, 0.8)'
       ctx.font = fontSize + 'px monospace'
       
       // Draw characters
       for (let i = 0; i < drops.length; i++) {
-        const text = matrixChars[Math.floor(Math.random() * matrixChars.length)]
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize)
+        // Random character
+        const char = matrixChars[Math.floor(Math.random() * matrixChars.length)]
         
-        // Reset drop when it goes off screen - less frequent
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.99) {
-          drops[i] = 0
+        // Varying opacity and colors based on position
+        const opacity = Math.max(0, 1 - (drops[i] * fontSize) / canvas.height)
+        const colorIndex = Math.floor(Math.random() * colors.length)
+        
+        // Trail effect - brighter at head, dimmer at tail
+        if (drops[i] * fontSize < canvas.height) {
+          ctx.fillStyle = colors[colorIndex] + Math.floor(opacity * 255).toString(16).padStart(2, '0')
+          ctx.fillText(char, i * fontSize, drops[i] * fontSize)
         }
         
-        // Slower movement
+        // Move drops with varying speeds
         if (Math.random() > 0.98) {
-          drops[i]++
+          drops[i] += speeds[i]
+        }
+        
+        // Reset with more randomness
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = -Math.random() * 20
+          speeds[i] = 0.5 + Math.random() * 1.5
         }
       }
     }
     
-    // Slower animation for background effect
-    const interval = setInterval(draw, 100)
+    // Faster animation for more dynamic effect
+    const interval = setInterval(draw, 50)
     
     return () => {
       clearInterval(interval)

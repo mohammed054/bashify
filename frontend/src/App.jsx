@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import MatrixRain from './MatrixRain'
+import FloatingBinary from './FloatingBinary'
+import BootSequence from './BootSequence'
+import soundManager from './SoundManager'
 import './App.css'
 
 function App() {
@@ -8,11 +11,20 @@ function App() {
   const [output, setOutput] = useState('')
   const [isConnected, setIsConnected] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
+  const [isBooting, setIsBooting] = useState(true)
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://bashify-backend.up.railway.app'
 
   useEffect(() => {
-    checkBackendConnection()
-  }, [])
+    if (!isBooting) {
+      checkBackendConnection()
+    }
+  }, [isBooting])
+
+  const handleBootComplete = () => {
+    setIsBooting(false)
+    // Initialize sound manager on first user interaction
+    soundManager.init()
+  }
 
   const checkBackendConnection = async () => {
     try {
@@ -38,6 +50,7 @@ function App() {
       setTimeout(() => {
         setOutput(response.data.command)
         setIsTyping(false)
+        soundManager.playSuccessSound()
       }, 500)
       
     } catch (error) {
@@ -50,13 +63,27 @@ function App() {
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
+      soundManager.playClickSound()
       handleTranslate()
+    } else {
+      soundManager.playKeySound()
     }
+  }
+
+  if (isBooting) {
+    return (
+      <>
+        <MatrixRain />
+        <FloatingBinary />
+        <BootSequence onComplete={handleBootComplete} />
+      </>
+    )
   }
 
   return (
     <>
       <MatrixRain />
+      <FloatingBinary />
       
       {/* Connection Status Popup */}
       <div className="connection-status">

@@ -32,8 +32,103 @@ body {
   width: 100%;
   height: 100%;
   z-index: 0;
-  opacity: 0.15;
+  opacity: 0.25;
   pointer-events: none;
+}
+
+/* Floating Binary Particles */
+.floating-binary {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Boot Sequence */
+.boot-sequence {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 800px;
+  background: rgba(10, 10, 10, 0.98);
+  border: 1px solid var(--terminal-border);
+  border-radius: 10px;
+  padding: 2rem;
+  z-index: 100;
+  box-shadow: 0 0 40px rgba(0, 255, 65, 0.2);
+}
+
+.boot-content {
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: var(--terminal-green);
+}
+
+.boot-line {
+  margin: 0.5rem 0;
+  opacity: 0;
+  animation: fadeIn 0.3s forwards;
+}
+
+.boot-line:nth-child(1) { animation-delay: 0.1s; }
+.boot-line:nth-child(2) { animation-delay: 0.2s; }
+.boot-line:nth-child(3) { animation-delay: 0.3s; }
+.boot-line:nth-child(4) { animation-delay: 0.4s; }
+.boot-line:nth-child(5) { animation-delay: 0.5s; }
+.boot-line:nth-child(6) { animation-delay: 0.6s; }
+.boot-line:nth-child(7) { animation-delay: 0.7s; }
+.boot-line:nth-child(8) { animation-delay: 0.8s; }
+
+.boot-prompt {
+  color: var(--terminal-dim);
+  margin-right: 0.5rem;
+}
+
+.boot-text {
+  color: var(--terminal-green);
+}
+
+.boot-ok {
+  color: #00ff00;
+  margin-left: 0.5rem;
+  font-weight: 500;
+}
+
+.boot-flash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 255, 65, 0.1);
+  z-index: 99;
+  animation: flash 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes flash {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.cursor-blink {
+  display: inline-block;
+  width: 10px;
+  height: 20px;
+  background: var(--terminal-green);
+  animation: blink 1s infinite;
+  vertical-align: middle;
+  margin-left: 2px;
 }
 
 /* Terminal Container */
@@ -48,8 +143,88 @@ body {
   border: 1px solid var(--terminal-border);
   border-radius: 10px;
   padding: 2rem;
+  z-index: 2;
+  box-shadow: 
+    0 0 30px rgba(0, 255, 65, 0.1),
+    inset 0 0 20px rgba(0, 255, 65, 0.05);
+  animation: terminalReveal 0.5s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.terminal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    rgba(255, 255, 255, 0.02) 50%,
+    rgba(255, 255, 255, 0) 50%
+  );
+  background-size: 100% 4px;
   z-index: 1;
-  box-shadow: 0 0 30px rgba(0, 255, 65, 0.1);
+  pointer-events: none;
+  animation: scanlines 8s linear infinite;
+}
+
+.terminal::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+@keyframes terminalReveal {
+  from { 
+    opacity: 0; 
+    transform: translate(-50%, -50%) scale(0.9);
+    filter: blur(10px);
+  }
+  to { 
+    opacity: 1; 
+    transform: translate(-50%, -50%) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes scanlines {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 8px; }
+}
+
+@keyframes flicker {
+  0% { opacity: 0.98; }
+  5% { opacity: 1; }
+  10% { opacity: 0.95; }
+  15% { opacity: 1; }
+  20% { opacity: 0.98; }
+  25% { opacity: 1; }
+  30% { opacity: 0.97; }
+  35% { opacity: 1; }
+  40% { opacity: 0.96; }
+  45% { opacity: 1; }
+  50% { opacity: 0.98; }
+  55% { opacity: 1; }
+  60% { opacity: 0.95; }
+  65% { opacity: 1; }
+  70% { opacity: 0.99; }
+  75% { opacity: 1; }
+  80% { opacity: 0.97; }
+  85% { opacity: 1; }
+  90% { opacity: 0.96; }
+  95% { opacity: 1; }
+  100% { opacity: 0.98; }
 }
 
 /* Terminal Header */
@@ -59,6 +234,9 @@ body {
   margin-bottom: 2rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--terminal-border);
+  position: relative;
+  z-index: 2;
+  animation: flicker 5s infinite;
 }
 
 .terminal-dots {
@@ -71,15 +249,84 @@ body {
   width: 12px;
   height: 12px;
   border-radius: 50%;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
 }
 
-.terminal-dot.red { background: #ff5555; }
-.terminal-dot.yellow { background: #ffff00; }
-.terminal-dot.green { background: #00ff00; }
+.terminal-dot.red { 
+  background: #ff5555; 
+  box-shadow: 0 0 5px rgba(255, 85, 85, 0.3);
+}
+.terminal-dot.yellow { 
+  background: #ffff00; 
+  box-shadow: 0 0 5px rgba(255, 255, 0, 0.3);
+}
+.terminal-dot.green { 
+  background: #00ff00; 
+  box-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+}
+
+.terminal-dot:hover {
+  transform: scale(1.2);
+}
+
+.terminal-dot.red:hover { 
+  box-shadow: 0 0 15px rgba(255, 85, 85, 0.8);
+  animation: pulse 0.5s ease-in-out;
+}
+.terminal-dot.yellow:hover { 
+  box-shadow: 0 0 15px rgba(255, 255, 0, 0.8);
+  animation: pulse 0.5s ease-in-out;
+}
+.terminal-dot.green:hover { 
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.8);
+  animation: pulse 0.5s ease-in-out;
+}
 
 .terminal-title {
   color: var(--terminal-dim);
   font-size: 0.9rem;
+  position: relative;
+  display: inline-block;
+  animation: titleGlitch 4s infinite;
+}
+
+.terminal-title:hover {
+  animation: titleGlitch 0.3s infinite;
+  color: var(--terminal-green);
+}
+
+@keyframes titleGlitch {
+  0%, 95%, 100% {
+    text-shadow: 
+      0 0 10px rgba(0, 255, 65, 0.5),
+      0 0 20px rgba(0, 255, 65, 0.3);
+  }
+  96% {
+    text-shadow: 
+      2px 0 rgba(255, 0, 0, 0.5),
+      -2px 0 rgba(0, 0, 255, 0.5),
+      0 0 10px rgba(0, 255, 65, 0.8);
+  }
+  97% {
+    text-shadow: 
+      -2px 0 rgba(255, 0, 0, 0.5),
+      2px 0 rgba(0, 0, 255, 0.5),
+      0 0 20px rgba(0, 255, 65, 0.5);
+  }
+  98% {
+    text-shadow: 
+      2px 0 rgba(255, 0, 0, 0.3),
+      -2px 0 rgba(0, 0, 255, 0.3),
+      0 0 15px rgba(0, 255, 65, 0.6);
+  }
+  99% {
+    text-shadow: 
+      -2px 0 rgba(255, 0, 0, 0.4),
+      2px 0 rgba(0, 0, 255, 0.4),
+      0 0 10px rgba(0, 255, 65, 0.7);
+  }
 }
 
 /* Connection Status - Small Popup */
@@ -97,6 +344,17 @@ body {
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
+  animation: statusGlow 3s ease-in-out infinite alternate;
+}
+
+.connection-status:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+}
+
+@keyframes statusGlow {
+  from { box-shadow: 0 0 5px rgba(0, 255, 65, 0.1); }
+  to { box-shadow: 0 0 15px rgba(0, 255, 65, 0.2); }
 }
 
 .status-dot {
@@ -120,6 +378,8 @@ body {
   align-items: center;
   margin-bottom: 1rem;
   color: var(--terminal-dim);
+  position: relative;
+  z-index: 2;
 }
 
 .prompt-symbol {
@@ -137,11 +397,22 @@ body {
   font-size: 1rem;
   outline: none;
   caret-color: var(--terminal-green);
+  transition: all 0.3s ease;
+  position: relative;
 }
 
 .terminal-input::placeholder {
   color: var(--terminal-dim);
   opacity: 0.5;
+}
+
+.terminal-input:focus {
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.8);
+  box-shadow: inset 0 0 20px rgba(0, 255, 65, 0.1);
+}
+
+.terminal-input:hover {
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
 }
 
 /* Terminal Output */
@@ -155,6 +426,14 @@ body {
   font-family: 'Fira Code', 'Courier New', monospace;
   white-space: pre-wrap;
   word-wrap: break-word;
+  position: relative;
+  z-index: 2;
+  animation: outputGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes outputGlow {
+  from { box-shadow: 0 0 5px rgba(0, 255, 65, 0.1); }
+  to { box-shadow: 0 0 15px rgba(0, 255, 65, 0.3); }
 }
 
 .output-label {
