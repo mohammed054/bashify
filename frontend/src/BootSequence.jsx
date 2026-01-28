@@ -35,14 +35,14 @@ const BootSequence = ({ onComplete }) => {
       <div className="boot-content">
         {bootLines.slice(0, currentLine).map((line, index) => (
           <div key={index} className="boot-line">
-            <span className="boot-prompt">></span>
+            <span className="boot-prompt">&gt;</span>
             <span className="boot-text">{line}</span>
             {line.includes('[OK]') && <span className="boot-ok">[OK]</span>}
           </div>
         ))}
         {currentLine < bootLines.length && (
           <div className="boot-line">
-            <span className="boot-prompt">></span>
+            <span className="boot-prompt">&gt;</span>
             <span className="cursor-blink"></span>
           </div>
         )}
