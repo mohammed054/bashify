@@ -8,16 +8,5 @@
     "healthcheckTimeout": 30,
     "restartPolicyType": "on_failure",
     "restartPolicyMaxRetries": 10
-  },
-  "services": {
-    "bashify-backend": {
-      "source": {
-        "type": "git",
-        "git": {
-          "url": "https://github.com/mohammed054/bashify",
-          "branch": "main"
-        }
-      }
-    }
   }
 }
