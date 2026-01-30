@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 // Environment variable validation
-const requiredEnvVars = ['HF_API_TOKEN'];
+const requiredEnvVars = []; // HF_API_TOKEN is now optional for basic operation
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
@@ -12,6 +12,12 @@ if (missingVars.length > 0) {
   });
   console.error('\nSee .env.example for required variables.');
   process.exit(1);
+}
+
+// Warning for optional HF_API_TOKEN
+if (!process.env.HF_API_TOKEN) {
+  console.warn('⚠️  HF_API_TOKEN not set - translation service will not work');
+  console.warn('Set HF_API_TOKEN to enable translation functionality');
 }
 
 const express = require('express');
