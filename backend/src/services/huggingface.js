@@ -23,7 +23,7 @@ async function translateToBash(englishInput) {
   const HF_API_TOKEN = process.env.HF_API_TOKEN;
 
   if (!HF_API_TOKEN) {
-    throw new Error('HF_API_TOKEN environment variable not set');
+    throw new Error('Translation service not configured - missing API token');
   }
 
   try {

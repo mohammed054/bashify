@@ -6,7 +6,14 @@ export default defineConfig({
   plugins: [react()],
   base: '/bashify/',
   build: {
-    outDir: '../public',
-    emptyOutDir: true
-  }
+    outDir: 'dist',
+    emptyOutDir: true,
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        assetFileNames: 'assets/[name]-[hash][extname]'
+      }
+    }
+  },
+  publicDir: 'public'
 })

@@ -1,78 +1,119 @@
 require('dotenv').config();
+
+// Environment variable validation
+const requiredEnvVars = []; // HF_API_TOKEN is now optional for basic operation
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+  console.error('❌ Missing required environment variables:', missingVars);
+  console.error('Please set the following environment variables:');
+  missingVars.forEach(varName => {
+    console.error(`  - ${varName}`);
+  });
+  console.error('\nSee .env.example for required variables.');
+  process.exit(1);
+}
+
+// Warning for optional HF_API_TOKEN
+if (!process.env.HF_API_TOKEN) {
+  console.warn('⚠️  HF_API_TOKEN not set - translation service will not work');
+  console.warn('Set HF_API_TOKEN to enable translation functionality');
+}
+
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
 const translateRoutes = require('./routes/translate');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Enhanced logging
-const log = (message, type = 'INFO') => {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] [${type}] ${message}`);
-};
+console.log('✅ Environment variables validated');
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Security middleware
+app.use(helmet());
+app.use(compression());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  skip: (req) => req.path === '/health' // Skip rate limiting for health checks
+});
+app.use(limiter);
+
+// CORS configuration
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'https://mohammed054.github.io',
+  'https://mohammed054.github.io/bashify'
+];
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
+
+// Body parsing with size limit
+app.use(express.json({ limit: '10mb' }));
 
 // Request logging middleware
 app.use((req, res, next) => {
-  log(`${req.method} ${req.path} - ${req.ip}`);
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const logLevel = res.statusCode >= 400 ? 'ERROR' : 'INFO';
+    console.log(`[${logLevel}] ${req.method} ${req.path} - ${res.statusCode} - ${duration}ms`);
+  });
   next();
 });
 
 // Routes
 app.use('/api/translate', translateRoutes);
 
-// Main route for frontend connection
-app.get('/', (req, res) => {
-  log('Root endpoint accessed');
-  res.json({ 
-    message: 'Bashify backend is running successfully!',
-    version: '1.0.0',
-    endpoints: {
-      '/api/translate': 'Translate English to Bash commands',
-      '/health': 'Health check endpoint'
-    },
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  log('Health check endpoint accessed');
-  res.json({ 
-    status: 'OK', 
+// Enhanced health check endpoint
+app.get('/health', async (req, res) => {
+  const health = {
+    status: 'OK',
     message: 'Bashify backend is running',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// API info endpoint
-app.get('/api', (req, res) => {
-  log('API info endpoint accessed');
-  res.json({
-    name: 'Bashify Backend API',
-    version: '1.0.0',
-    description: 'English to Bash command translation service',
-    endpoints: {
-      'GET /': 'Server status and available endpoints',
-      'GET /health': 'Health check',
-      'GET /api': 'API information',
-      'POST /api/translate': 'Translate English text to Bash commands'
-    },
-    requirements: {
-      'Content-Type': 'application/json',
-      'Body': { input: 'string (required)' }
-    },
-    timestamp: new Date().toISOString()
-  });
+    timestamp: new Date().toISOString(),
+    version: process.env.npm_package_version || '1.0.0',
+    services: {
+      huggingface: process.env.HF_API_TOKEN ? 'configured' : 'missing',
+      memory: process.memoryUsage(),
+      uptime: process.uptime()
+    }
+  };
+  
+  // Test Hugging Face API connectivity (optional, with timeout)
+  if (process.env.HF_API_TOKEN) {
+    try {
+      const axios = require('axios');
+      const response = await axios.get('https://api-inference.huggingface.co/status', {
+        timeout: 5000,
+        headers: {
+          'Authorization': `Bearer ${process.env.HF_API_TOKEN}`
+        }
+      });
+      health.services.huggingface = 'connected';
+      health.services.huggingfaceStatus = response.status;
+    } catch (error) {
+      health.services.huggingface = 'error';
+      health.services.huggingfaceError = error.message;
+      health.status = 'DEGRADED';
+    }
+  }
+  
+  const statusCode = health.status === 'OK' ? 200 : 503;
+  res.status(statusCode).json(health);
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  log(`Error: ${err.message}`, 'ERROR');
+  console.error(`Error: ${err.message}`);
   console.error(err.stack);
   
   // Don't expose internal errors in production
@@ -86,7 +127,7 @@ app.use((err, req, res, next) => {
 
 // 404 handler
 app.use((req, res) => {
-  log(`404: ${req.method} ${req.originalUrl}`, 'WARN');
+  console.log(`404: ${req.method} ${req.originalUrl}`);
   res.status(404).json({ 
     error: 'Endpoint not found',
     available_endpoints: [
@@ -98,21 +139,27 @@ app.use((req, res) => {
   });
 });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  log('SIGTERM received, shutting down gracefully', 'INFO');
-  process.exit(0);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Bashify backend server running on port ${PORT}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
-process.on('SIGINT', () => {
-  log('SIGINT received, shutting down gracefully', 'INFO');
-  process.exit(0);
-});
+// Graceful shutdown handling
+const gracefulShutdown = (signal) => {
+  console.log(`\n🔄 ${signal} received, shutting down gracefully...`);
+  
+  server.close(() => {
+    console.log('✅ HTTP server closed');
+    process.exit(0);
+  });
+  
+  // Force close after 30 seconds
+  setTimeout(() => {
+    console.error('❌ Forced shutdown after timeout');
+    process.exit(1);
+  }, 30000);
+};
 
-// Start server
-app.listen(PORT, () => {
-  log(`🚀 Bashify backend server running on port ${PORT}`, 'INFO');
-  log(`📊 Server ready to accept requests`, 'INFO');
-  log(`🔗 Health check available at: http://localhost:${PORT}/health`, 'INFO');
-  log(`🔗 API info available at: http://localhost:${PORT}/api`, 'INFO');
-});
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

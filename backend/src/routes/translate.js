@@ -14,9 +14,16 @@ router.post('/', async (req, res) => {
       });
     }
 
-    if (input.trim().length === 0) {
+    // Input sanitization
+    const sanitizedInput = input
+      .trim()
+      .replace(/[<>]/g, '') // Remove potential HTML tags
+      .replace(/[\x00-\x1f\x7f]/g, '') // Remove control characters
+      .substring(0, 1000); // Enforce length limit
+
+    if (sanitizedInput.length === 0) {
       return res.status(400).json({ 
-        error: 'Input cannot be empty' 
+        error: 'Input cannot be empty or contain only invalid characters' 
       });
     }
 
@@ -27,19 +34,32 @@ router.post('/', async (req, res) => {
     }
 
     // Translate English to Bash
-    const bashCommand = await translateToBash(input.trim());
+    const bashCommand = await translateToBash(sanitizedInput);
 
     res.json({ command: bashCommand });
 
   } catch (error) {
-    console.error('Translation error:', error);
+    const errorId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    console.error(`[${errorId}] Translation error:`, error);
     
     if (error.message.includes('API key')) {
-      res.status(500).json({ error: 'Server configuration error' });
+      res.status(500).json({ 
+        error: 'Server configuration error',
+        errorId,
+        timestamp: new Date().toISOString()
+      });
     } else if (error.message.includes('quota')) {
-      res.status(429).json({ error: 'API quota exceeded' });
+      res.status(429).json({ 
+        error: 'API quota exceeded',
+        errorId,
+        timestamp: new Date().toISOString()
+      });
     } else {
-      res.status(500).json({ error: 'Translation service unavailable' });
+      res.status(500).json({ 
+        error: 'Translation service unavailable',
+        errorId,
+        timestamp: new Date().toISOString()
+      });
     }
   }
 });
